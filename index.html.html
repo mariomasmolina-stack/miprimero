@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1628">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bitácora TaiChi">
+<title>Bitácora TaiChi</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A1628'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23E0A32E' stroke-width='3'/%3E%3Cpath d='M32 13a9.5 9.5 0 0 0 0 19 9.5 9.5 0 0 1 0 19z' fill='%23E0A32E'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --navy:#0A1628;
+    --navy-2:#122641;
+    --panel:#16304F;
+    --line:#22456D;
+    --gold:#E0A32E;
+    --gold-soft:#8A6417;
+    --blue:#4A9BE0;
+    --green:#3FA96B;
+    --ink:#EDF3FA;
+    --ink-2:#9FB6CE;
+    --ink-3:#6E88A3;
+    --fs:19px;
+    --serif:Cambria,"Hoefler Text",Georgia,"Times New Roman",serif;
+    --sans:Calibri,"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--navy);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:var(--fs);
+    line-height:1.5;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust:100%;
+  }
+  button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+  button{cursor:pointer;border:none;background:none}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+
+  /* ---------- Cabecera ---------- */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,#0A1628 78%,rgba(10,22,40,.94));
+    border-bottom:1px solid var(--line);
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand svg{flex:none}
+  .brand h1{
+    font-family:var(--serif);font-weight:600;
+    font-size:1.22em;letter-spacing:.01em;margin:0;color:var(--ink);
+  }
+  .brand p{margin:2px 0 0;font-size:.72em;color:var(--ink-3)}
+  .rowtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+  .who{display:flex;gap:8px}
+  .who button{
+    padding:9px 18px;border-radius:999px;border:1px solid var(--line);
+    background:var(--navy-2);color:var(--ink-2);font-size:.86em;font-weight:600;
+  }
+  .who button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#241802}
+  .zoom{display:flex;gap:6px}
+  .zoom button{
+    width:44px;height:44px;border-radius:12px;border:1px solid var(--line);
+    background:var(--navy-2);color:var(--ink-2);font-family:var(--serif);line-height:1;
+  }
+  .zoom button:first-child{font-size:.85em}
+  .zoom button:last-child{font-size:1.15em}
+
+  /* ---------- Estructura ---------- */
+  main{padding:18px 16px 8px;max-width:640px;margin:0 auto}
+  .view{display:none;animation:in .18s ease-out}
+  .view.on{display:block}
+  @keyframes in{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.view{animation:none}}
+
+  h2{font-family:var(--serif);font-size:1.06em;font-weight:600;margin:0 0 12px;color:var(--gold)}
+  .card{background:var(--navy-2);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+  .card + .card{margin-top:14px}
+
+  /* ---------- Hoy ---------- */
+  .daybar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .daybar button{
+    width:48px;height:48px;flex:none;border-radius:12px;border:1px solid var(--line);
+    background:var(--navy-2);color:var(--ink-2);font-size:1.1em;
+  }
+  .daybar button[disabled]{opacity:.3}
+  .daylabel{flex:1;text-align:center}
+  .daylabel strong{display:block;font-family:var(--serif);font-size:1.02em;font-weight:600}
+  .daylabel span{font-size:.76em;color:var(--ink-3)}
+
+  .meter{height:10px;border-radius:999px;background:#0C1D34;border:1px solid var(--line);overflow:hidden}
+  .meter i{display:block;height:100%;background:var(--gold);width:0;transition:width .25s ease}
+  .meter.full i{background:var(--green)}
+  .meterline{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px;font-size:.82em;color:var(--ink-2)}
+  .meterline b{font-family:var(--serif);font-size:1.15em;color:var(--ink)}
+
+  ul.ex{list-style:none;margin:16px 0 0;padding:0}
+  ul.ex li{
+    border:1px solid var(--line);border-radius:var(--r);background:var(--navy-2);
+    margin-bottom:10px;overflow:hidden;
+  }
+  ul.ex li.done{border-color:var(--gold-soft);background:#152A45}
+  .exrow{display:flex;align-items:center;gap:14px;width:100%;padding:15px 14px;text-align:left}
+  .tick{
+    width:34px;height:34px;flex:none;border-radius:10px;border:2px solid var(--line);
+    background:#0C1D34;display:grid;place-items:center;
+  }
+  li.done .tick{background:var(--gold);border-color:var(--gold)}
+  .tick svg{opacity:0}
+  li.done .tick svg{opacity:1}
+  .exname{flex:1;min-width:0}
+  .exname strong{display:block;font-weight:600;font-size:.98em;line-height:1.3}
+  li.done .exname strong{color:var(--gold)}
+  .exname span{font-size:.76em;color:var(--ink-3)}
+  .info{
+    width:36px;height:36px;flex:none;border-radius:50%;border:1px solid var(--line);
+    color:var(--ink-3);font-family:var(--serif);font-size:.9em;
+  }
+  .hint{display:none;padding:0 16px 15px;color:var(--ink-2);font-size:.85em;line-height:1.55}
+  li.open .hint{display:block}
+
+  .btn{
+    display:block;width:100%;padding:15px;border-radius:12px;font-weight:600;font-size:.92em;
+    border:1px solid var(--line);background:var(--navy-2);color:var(--ink);text-align:center;
+  }
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#241802}
+  .btn.ghost{background:transparent;color:var(--ink-2)}
+  .btn + .btn{margin-top:10px}
+
+  textarea{
+    width:100%;min-height:88px;resize:vertical;padding:12px;border-radius:12px;
+    border:1px solid var(--line);background:#0C1D34;font-size:.9em;line-height:1.5;
+  }
+  label.fld{display:block;font-size:.78em;color:var(--ink-3);margin:0 0 7px}
+
+  /* ---------- Calendario ---------- */
+  .monthbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .monthbar strong{font-family:var(--serif);font-size:1em;font-weight:600}
+  .monthbar button{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--navy-2);color:var(--ink-2)}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .grid .dow{text-align:center;font-size:.68em;color:var(--ink-3);padding-bottom:4px}
+  .cell{
+    aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:#0C1D34;
+    display:grid;place-items:center;font-size:.8em;color:var(--ink-3);position:relative;
+  }
+  .cell.blank{border:none;background:none}
+  .cell.part{border-color:var(--blue);color:var(--ink)}
+  .cell.full{background:var(--gold);border-color:var(--gold);color:#241802;font-weight:700}
+  .cell.today{box-shadow:0 0 0 2px var(--ink-2) inset}
+  .cell.sel{box-shadow:0 0 0 2px var(--blue) inset}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+  .stat{background:#0C1D34;border:1px solid var(--line);border-radius:12px;padding:13px 8px;text-align:center}
+  .stat b{display:block;font-family:var(--serif);font-size:1.5em;color:var(--gold);line-height:1.1}
+  .stat span{font-size:.7em;color:var(--ink-3)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:.74em;color:var(--ink-3)}
+  .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+
+  /* ---------- Ejercicios / ajustes ---------- */
+  .edit{border:1px solid var(--line);border-radius:var(--r);background:#0C1D34;padding:14px;margin-bottom:10px}
+  .edit input,.edit textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--navy-2);font-size:.88em}
+  .edit textarea{min-height:66px;resize:vertical}
+  .edit .two{display:flex;gap:10px;margin-top:9px}
+  .edit .two input{flex:none;width:96px;text-align:center}
+  .tools{display:flex;gap:8px;margin-left:auto}
+  .tools button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--navy-2);color:var(--ink-2);font-size:.9em}
+  .tools button.del{color:#E77}
+  .edit .head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .edit .head span{font-family:var(--serif);color:var(--ink-3);font-size:.85em}
+  .note{font-size:.8em;color:var(--ink-3);line-height:1.55}
+
+  /* ---------- Navegación inferior ---------- */
+  nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    background:#0B1B31;border-top:1px solid var(--line);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav button{padding:8px 2px;border-radius:12px;color:var(--ink-3);font-size:.7em;display:grid;justify-items:center;gap:5px}
+  nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  nav button[aria-current="page"]{color:var(--gold)}
+
+  .banner{
+    margin:0 0 16px;padding:13px 15px;border-radius:12px;
+    background:#3A2A08;border:1px solid var(--gold-soft);color:#F3DCA6;font-size:.82em;line-height:1.5;
+  }
+  .foot{text-align:center;color:var(--ink-3);font-size:.72em;padding:22px 0 6px;font-family:var(--serif)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg width="38" height="38" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="21" fill="none" stroke="#E0A32E" stroke-width="3"/>
+      <path d="M32 11a10.5 10.5 0 0 0 0 21 10.5 10.5 0 0 1 0 21z" fill="#E0A32E"/>
+    </svg>
+    <div>
+      <h1>Bitácora TaiChi</h1>
+      <p>Práctica diaria en casa</p>
+    </div>
+  </div>
+  <div class="rowtop">
+    <div class="who" id="who"></div>
+    <div class="zoom">
+      <button type="button" id="fsDown" aria-label="Reducir el tamaño de la letra">A</button>
+      <button type="button" id="fsUp" aria-label="Aumentar el tamaño de la letra">A</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="banner hidden" id="banner"></div>
+
+  <!-- HOY -->
+  <section class="view on" id="v-hoy">
+    <div class="daybar">
+      <button type="button" id="prevDay" aria-label="Día anterior">‹</button>
+      <div class="daylabel"><strong id="dayName"></strong><span id="dayDate"></span></div>
+      <button type="button" id="nextDay" aria-label="Día siguiente">›</button>
+    </div>
+
+    <div class="card">
+      <div class="meterline"><span id="mText">—</span><b id="mPct">0%</b></div>
+      <div class="meter" id="meter"><i></i></div>
+      <ul class="ex" id="exList"></ul>
+      <button class="btn gold" type="button" id="allBtn">Marcar toda la sesión</button>
+    </div>
+
+    <div class="card">
+      <label class="fld" for="dayNote">Notas del día</label>
+      <textarea id="dayNote" placeholder="Cómo te has sentido, qué has notado, qué ajustar mañana."></textarea>
+    </div>
+    <p class="foot">Bitácora TaiChi · Mario MAS</p>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section class="view" id="v-cal">
+    <div class="card">
+      <div class="monthbar">
+        <button type="button" id="prevMonth" aria-label="Mes anterior">‹</button>
+        <strong id="monthName"></strong>
+        <button type="button" id="nextMonth" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="grid" id="calGrid"></div>
+      <div class="legend">
+        <span><i style="background:var(--gold)"></i>Sesión completa</span>
+        <span><i style="background:#0C1D34;border:1px solid var(--blue)"></i>Sesión parcial</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="sRacha">0</b><span>racha actual</span></div>
+      <div class="stat"><b id="sMejor">0</b><span>mejor racha</span></div>
+      <div class="stat"><b id="sMes">0</b><span>días este mes</span></div>
+    </div>
+  </section>
+
+  <!-- PROGRESO -->
+  <section class="view" id="v-prog">
+    <div class="card">
+      <h2>Últimos 30 días</h2>
+      <div id="chart"></div>
+      <p class="note" id="chartNote"></p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="pDias">0</b><span>días practicados</span></div>
+      <div class="stat"><b id="pMin">0</b><span>minutos totales</span></div>
+      <div class="stat"><b id="pPct">0%</b><span>constancia 30 d.</span></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="view" id="v-set">
+    <div class="card">
+      <h2>Ejercicios de <span id="setWho"></span></h2>
+      <p class="note">Cada persona tiene su propia lista. Los cambios se guardan al escribir.</p>
+      <div id="editList" style="margin-top:14px"></div>
+      <button class="btn" type="button" id="addEx">Añadir un ejercicio</button>
+      <button class="btn ghost" type="button" id="resetEx">Restaurar la lista propuesta</button>
+    </div>
+
+    <div class="card">
+      <h2>Copia de seguridad</h2>
+      <p class="note">Los datos viven solo en este teléfono. Guarda una copia de vez en cuando, y siempre antes de cambiar de móvil o borrar los datos del navegador.</p>
+      <button class="btn" type="button" id="exportBtn" style="margin-top:14px">Guardar copia en el teléfono</button>
+      <button class="btn ghost" type="button" id="importBtn">Restaurar desde una copia</button>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+    </div>
+    <p class="foot">Bitácora TaiChi · Mario MAS · v1.0</p>
+  </section>
+</main>
+
+<nav>
+  <button type="button" data-go="hoy" aria-current="page">
+    <svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>Hoy</button>
+  <button type="button" data-go="cal">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Calendario</button>
+  <button type="button" data-go="prog">
+    <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Progreso</button>
+  <button type="button" data-go="set">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8M18.4 18.4l-1.8-1.8M7.4 7.4L5.6 5.6"/></svg>Ajustes</button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Almacenamiento tolerante a fallos ---------- */
+  var KEY = "bitacora_taichi_v1";
+  var memoria = null, persiste = true;
+  function leer(){
+    if(!persiste) return memoria;
+    try{ var s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; }
+    catch(e){ persiste = false; return memoria; }
+  }
+  function guardar(){
+    if(persiste){
+      try{ localStorage.setItem(KEY, JSON.stringify(D)); return; }
+      catch(e){ persiste = false; avisoPreview(); }
+    }
+    memoria = D;
+  }
+  function avisoPreview(){
+    var b = document.getElementById("banner");
+    b.textContent = "Vista previa: este navegador no permite guardar datos aquí, así que las marcas se perderán al cerrar. Descarga el archivo al teléfono y ábrelo desde allí.";
+    b.classList.remove("hidden");
+  }
+
+  /* ---------- Datos por defecto ---------- */
+  function porDefecto(){
+    return [
+      {n:"Postura Wuji y respiración", m:2, d:"De pie, pies a la anchura de las caderas y rodillas apenas flexionadas. Hombros sueltos. Respira por la nariz, lento y hondo, llevando el aire al abdomen."},
+      {n:"Movilidad articular", m:1, d:"Círculos suaves de cuello, hombros, muñecas, caderas y tobillos. Recorrido corto y sin forzar: se trata de despertar la articulación, no de estirarla."},
+      {n:"Abrir el Qi (Qi Shi)", m:1, d:"Sube las manos hasta la altura de los hombros al inspirar, y déjalas bajar al espirar. Los brazos suben porque el cuerpo se eleva, no por fuerza de hombro."},
+      {n:"Separar la crin del caballo", m:2, d:"Alterna izquierda y derecha girando desde la cintura, con el peso pasando de una pierna a la otra. Una mano abre hacia arriba y la otra baja junto a la cadera."},
+      {n:"La grulla despliega las alas", m:1, d:"Una mano asciende abriendo el pecho mientras la otra desciende. Mantén el tronco erguido y la mirada al frente."},
+      {n:"Cepillar la rodilla y avanzar", m:2, d:"Una mano pasa por encima de la rodilla mientras la otra empuja hacia delante a la altura del hombro. Paso corto y estable."},
+      {n:"Manos como nubes", m:2, d:"Las manos se cruzan despacio delante del cuerpo mientras la cintura gira a un lado y al otro. Es el mejor ejercicio del conjunto para la coordinación."},
+      {n:"Equilibrio: elevar la rodilla", m:1, d:"Apoya una mano en la pared o en el respaldo de una silla y eleva una rodilla. Alterna piernas. Empieza por tres segundos por lado."},
+      {n:"Recoger y cerrar (Shou Shi)", m:1, d:"Manos delante del abdomen, una sobre otra. Tres respiraciones largas para cerrar la práctica antes de seguir con el día."}
+    ].map(function(e,i){ return {id:"e"+(i+1)+"_"+Math.random().toString(36).slice(2,7), n:e.n, m:e.m, d:e.d}; });
+  }
+  function perfilNuevo(nombre){ return {nombre:nombre, ejercicios:porDefecto(), registro:{}}; }
+
+  var D = leer();
+  if(!D || !D.perfiles){
+    D = {v:1, activo:"mario", fs:19, perfiles:{ mario:perfilNuevo("Mario"), myriam:perfilNuevo("Myriam") }};
+    guardar();
+  }
+  if(!persiste) avisoPreview();
+
+  var P = function(){ return D.perfiles[D.activo]; };
+
+  /* ---------- Fechas ---------- */
+  var DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  function iso(f){ return f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0"); }
+  function deIso(s){ var p=s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function hoyIso(){ return iso(new Date()); }
+  function mayus(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  var fechaSel = hoyIso();
+  var mesVista = new Date(); mesVista.setDate(1);
+
+  function reg(fecha){
+    var r = P().registro[fecha];
+    if(!r){ r = {hechos:[], nota:""}; P().registro[fecha] = r; }
+    return r;
+  }
+  function hechosValidos(fecha){
+    var r = P().registro[fecha]; if(!r) return [];
+    var ids = P().ejercicios.map(function(e){return e.id;});
+    return r.hechos.filter(function(h){ return ids.indexOf(h) >= 0; });
+  }
+
+  /* ---------- Vista: Hoy ---------- */
+  var elList = document.getElementById("exList");
+
+  function pintaHoy(){
+    var f = deIso(fechaSel);
+    document.getElementById("dayName").textContent = fechaSel === hoyIso() ? "Hoy" : mayus(DIAS[f.getDay()]);
+    document.getElementById("dayDate").textContent = f.getDate()+" de "+MESES[f.getMonth()]+" de "+f.getFullYear();
+    document.getElementById("nextDay").disabled = fechaSel >= hoyIso();
+
+    var ejs = P().ejercicios, hechos = hechosValidos(fechaSel);
+    elList.innerHTML = "";
+    ejs.forEach(function(e){
+      var hecho = hechos.indexOf(e.id) >= 0;
+      var li = document.createElement("li");
+      li.className = hecho ? "done" : "";
+
+      var fila = document.createElement("button");
+      fila.type = "button"; fila.className = "exrow";
+      fila.setAttribute("aria-pressed", hecho ? "true" : "false");
+      fila.innerHTML =
+        '<span class="tick"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#241802" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>'+
+        '<span class="exname"><strong></strong><span>'+e.m+' min</span></span>';
+      fila.querySelector("strong").textContent = e.n;
+      fila.addEventListener("click", function(){ alterna(e.id); });
+      li.appendChild(fila);
+
+      if(e.d){
+        var info = document.createElement("button");
+        info.type = "button"; info.className = "info"; info.textContent = "?";
+        info.setAttribute("aria-label", "Cómo se hace: "+e.n);
+        info.addEventListener("click", function(ev){ ev.stopPropagation(); li.classList.toggle("open"); });
+        fila.appendChild(info);
+        var h = document.createElement("div");
+        h.className = "hint"; h.textContent = e.d;
+        li.appendChild(h);
+      }
+      elList.appendChild(li);
+    });
+
+    var total = ejs.length, n = hechos.length;
+    var pct = total ? Math.round(n*100/total) : 0;
+    var mins = ejs.filter(function(e){ return hechos.indexOf(e.id)>=0; }).reduce(function(a,e){ return a + (+e.m||0); },0);
+    document.getElementById("mText").textContent = n+" de "+total+" · "+mins+" min";
+    document.getElementById("mPct").textContent = pct+"%";
+    var meter = document.getElementById("meter");
+    meter.querySelector("i").style.width = pct+"%";
+    meter.classList.toggle("full", pct === 100);
+    document.getElementById("allBtn").textContent = (n === total && total > 0) ? "Desmarcar toda la sesión" : "Marcar toda la sesión";
+    document.getElementById("dayNote").value = reg(fechaSel).nota || "";
+  }
+
+  function alterna(id){
+    var r = reg(fechaSel), i = r.hechos.indexOf(id);
+    if(i >= 0) r.hechos.splice(i,1); else r.hechos.push(id);
+    guardar(); pintaHoy();
+  }
+
+  document.getElementById("prevDay").addEventListener("click", function(){
+    var f = deIso(fechaSel); f.setDate(f.getDate()-1); fechaSel = iso(f); pintaHoy();
+  });
+  document.getElementById("nextDay").addEventListener("click", function(){
+    if(fechaSel >= hoyIso()) return;
+    var f = deIso(fechaSel); f.setDate(f.getDate()+1); fechaSel = iso(f); pintaHoy();
+  });
+  document.getElementById("allBtn").addEventListener("click", function(){
+    var r = reg(fechaSel), ids = P().ejercicios.map(function(e){return e.id;});
+    r.hechos = (hechosValidos(fechaSel).length === ids.length) ? [] : ids.slice();
+    guardar(); pintaHoy();
+  });
+  document.getElementById("dayNote").addEventListener("input", function(){
+    reg(fechaSel).nota = this.value; guardar();
+  });
+
+  /* ---------- Vista: Calendario ---------- */
+  function estado(fecha){
+    var h = hechosValidos(fecha).length, t = P().ejercicios.length;
+    if(!h) return 0;
+    return h >= t ? 2 : 1;
+  }
+
+  function pintaCal(){
+    document.getElementById("monthName").textContent = mayus(MESES[mesVista.getMonth()])+" "+mesVista.getFullYear();
+    var g = document.getElementById("calGrid");
+    g.innerHTML = "";
+    ["L","M","X","J","V","S","D"].forEach(function(d){
+      var c = document.createElement("div"); c.className = "dow"; c.textContent = d; g.appendChild(c);
+    });
+    var primero = new Date(mesVista.getFullYear(), mesVista.getMonth(), 1);
+    var hueco = (primero.getDay() + 6) % 7;
+    var dias = new Date(mesVista.getFullYear(), mesVista.getMonth()+1, 0).getDate();
+    for(var i=0;i<hueco;i++){ var b = document.createElement("div"); b.className = "cell blank"; g.appendChild(b); }
+    var enMes = 0;
+    for(var d=1; d<=dias; d++){
+      var f = iso(new Date(mesVista.getFullYear(), mesVista.getMonth(), d));
+      var e = estado(f); if(e) enMes++;
+      var c = document.createElement("button");
+      c.type = "button";
+      c.className = "cell"+(e===2?" full":e===1?" part":"")+(f===hoyIso()?" today":"")+(f===fechaSel?" sel":"");
+      c.textContent = d;
+      c.setAttribute("aria-label", d+" de "+MESES[mesVista.getMonth()]);
+      (function(fecha){
+        c.addEventListener("click", function(){
+          if(fecha > hoyIso()) return;
+          fechaSel = fecha; pintaHoy(); ir("hoy");
+        });
+      })(f);
+      g.appendChild(c);
+    }
+    var r = rachas();
+    document.getElementById("sRacha").textContent = r.actual;
+    document.getElementById("sMejor").textContent = r.mejor;
+    document.getElementById("sMes").textContent = enMes;
+  }
+
+  function rachas(){
+    var f = new Date(), actual = 0;
+    if(!estado(iso(f))) f.setDate(f.getDate()-1);
+    while(estado(iso(f))){ actual++; f.setDate(f.getDate()-1); }
+    var fechas = Object.keys(P().registro).filter(function(k){ return estado(k) > 0; }).sort();
+    var mejor = 0, seguidas = 0, prev = null;
+    fechas.forEach(function(k){
+      if(prev){
+        var ay = deIso(prev); ay.setDate(ay.getDate()+1);
+        seguidas = (iso(ay) === k) ? seguidas+1 : 1;
+      } else seguidas = 1;
+      if(seguidas > mejor) mejor = seguidas;
+      prev = k;
+    });
+    return {actual:actual, mejor:Math.max(mejor, actual)};
+  }
+
+  document.getElementById("prevMonth").addEventListener("click", function(){ mesVista.setMonth(mesVista.getMonth()-1); pintaCal(); });
+  document.getElementById("nextMonth").addEventListener("click", function(){ mesVista.setMonth(mesVista.getMonth()+1); pintaCal(); });
+
+  /* ---------- Vista: Progreso ---------- */
+  function pintaProg(){
+    var total = P().ejercicios.length || 1, barras = [], practicados = 0, hoy = new Date();
+    for(var i=29;i>=0;i--){
+      var f = new Date(hoy); f.setDate(f.getDate()-i);
+      var k = iso(f), n = hechosValidos(k).length;
+      if(n) practicados++;
+      barras.push({k:k, p:Math.min(100, Math.round(n*100/total)), dia:f.getDate()});
+    }
+    var W = 320, H = 130, gap = 2, w = (W - gap*29)/30;
+    var svg = '<svg viewBox="0 0 '+W+' '+(H+16)+'" width="100%" role="img" aria-label="Constancia de los últimos treinta días">';
+    svg += '<line x1="0" y1="'+H+'" x2="'+W+'" y2="'+H+'" stroke="#22456D" stroke-width="1"/>';
+    barras.forEach(function(b,i){
+      var x = i*(w+gap), h = Math.max(2, b.p*(H-8)/100), y = H - h;
+      var col = b.p >= 100 ? "#E0A32E" : b.p > 0 ? "#4A9BE0" : "#1B3556";
+      svg += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1.5" fill="'+col+'"/>';
+      if(i===0 || i===29) svg += '<text x="'+(x+w/2).toFixed(1)+'" y="'+(H+13)+'" fill="#6E88A3" font-size="9" text-anchor="middle">'+b.dia+'</text>';
+    });
+    svg += '</svg>';
+    document.getElementById("chart").innerHTML = svg;
+    document.getElementById("chartNote").textContent = "Cada barra es un día. Dorada, sesión completa; azul, sesión parcial.";
+
+    var dias = 0, mins = 0;
+    Object.keys(P().registro).forEach(function(k){
+      var h = hechosValidos(k); if(!h.length) return;
+      dias++;
+      P().ejercicios.forEach(function(e){ if(h.indexOf(e.id)>=0) mins += (+e.m||0); });
+    });
+    document.getElementById("pDias").textContent = dias;
+    document.getElementById("pMin").textContent = mins;
+    document.getElementById("pPct").textContent = Math.round(practicados*100/30)+"%";
+  }
+
+  /* ---------- Vista: Ajustes ---------- */
+  function pintaSet(){
+    document.getElementById("setWho").textContent = P().nombre;
+    var cont = document.getElementById("editList");
+    cont.innerHTML = "";
+    P().ejercicios.forEach(function(e, idx){
+      var box = document.createElement("div"); box.className = "edit";
+      var head = document.createElement("div"); head.className = "head";
+      var num = document.createElement("span"); num.textContent = (idx+1)+".";
+      var tools = document.createElement("div"); tools.className = "tools";
+      head.appendChild(num); head.appendChild(tools); box.appendChild(head);
+
+      function boton(txt, etiqueta, clase, fn){
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = txt; b.setAttribute("aria-label", etiqueta);
+        if(clase) b.className = clase;
+        b.addEventListener("click", fn); tools.appendChild(b);
+      }
+      boton("↑","Subir este ejercicio","",function(){ mueve(idx,-1); });
+      boton("↓","Bajar este ejercicio","",function(){ mueve(idx,1); });
+      boton("✕","Eliminar este ejercicio","del",function(){
+        if(confirm("¿Eliminar «"+e.n+"» de la lista?")){
+          P().ejercicios.splice(idx,1); guardar(); pintaSet(); pintaHoy();
+        }
+      });
+
+      var nom = document.createElement("input");
+      nom.type = "text"; nom.value = e.n; nom.setAttribute("aria-label","Nombre del ejercicio");
+      nom.addEventListener("input", function(){ e.n = this.value; guardar(); });
+      box.appendChild(nom);
+
+      var fila = document.createElement("div"); fila.className = "two";
+      var min = document.createElement("input");
+      min.type = "number"; min.min = "0"; min.max = "90"; min.value = e.m;
+      min.setAttribute("aria-label","Minutos");
+      min.addEventListener("input", function(){ e.m = Math.max(0, +this.value||0); guardar(); });
+      var desc = document.createElement("textarea");
+      desc.value = e.d || ""; desc.placeholder = "Cómo se hace"; desc.setAttribute("aria-label","Descripción");
+      desc.style.flex = "1";
+      desc.addEventListener("input", function(){ e.d = this.value; guardar(); });
+      fila.appendChild(min); fila.appendChild(desc);
+      box.appendChild(fila);
+      cont.appendChild(box);
+    });
+  }
+  function mueve(i, dir){
+    var a = P().ejercicios, j = i + dir;
+    if(j < 0 || j >= a.length) return;
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+    guardar(); pintaSet(); pintaHoy();
+  }
+  document.getElementById("addEx").addEventListener("click", function(){
+    P().ejercicios.push({id:"e"+Date.now().toString(36), n:"Ejercicio nuevo", m:1, d:""});
+    guardar(); pintaSet(); pintaHoy();
+  });
+  document.getElementById("resetEx").addEventListener("click", function(){
+    if(!confirm("Se sustituye la lista de "+P().nombre+" por la propuesta inicial. El historial de días no se toca. ¿Continuar?")) return;
+    P().ejercicios = porDefecto(); guardar(); pintaSet(); pintaHoy();
+  });
+
+  /* ---------- Copia de seguridad ---------- */
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(D, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "bitacora-taichi-"+hoyIso()+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+  });
+  document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+  document.getElementById("importFile").addEventListener("change", function(ev){
+    var f = ev.target.files && ev.target.files[0]; if(!f) return;
+    var lector = new FileReader();
+    lector.onload = function(){
+      try{
+        var nuevo = JSON.parse(lector.result);
+        if(!nuevo || !nuevo.perfiles) throw new Error("formato");
+        if(!confirm("La copia sustituye los datos actuales de este teléfono. ¿Continuar?")) return;
+        D = nuevo;
+        if(!D.perfiles.mario) D.perfiles.mario = perfilNuevo("Mario");
+        if(!D.perfiles.myriam) D.perfiles.myriam = perfilNuevo("Myriam");
+        if(!D.perfiles[D.activo]) D.activo = "mario";
+        guardar(); aplicaFs(); pintaWho(); todo();
+        alert("Copia restaurada.");
+      }catch(e){
+        alert("Ese archivo no es una copia de la Bitácora. Elige el archivo bitacora-taichi-….json que guardaste.");
+      }
+    };
+    lector.readAsText(f);
+    ev.target.value = "";
+  });
+
+  /* ---------- Perfiles y tamaño de letra ---------- */
+  function pintaWho(){
+    var c = document.getElementById("who");
+    c.innerHTML = "";
+    ["mario","myriam"].forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = D.perfiles[k].nombre;
+      b.setAttribute("aria-pressed", D.activo === k ? "true" : "false");
+      b.addEventListener("click", function(){
+        D.activo = k; fechaSel = hoyIso(); guardar(); pintaWho(); todo();
+      });
+      c.appendChild(b);
+    });
+  }
+  function aplicaFs(){ document.documentElement.style.setProperty("--fs", (D.fs||19)+"px"); }
+  document.getElementById("fsUp").addEventListener("click", function(){ D.fs = Math.min(26, (D.fs||19)+1); aplicaFs(); guardar(); });
+  document.getElementById("fsDown").addEventListener("click", function(){ D.fs = Math.max(16, (D.fs||19)-1); aplicaFs(); guardar(); });
+
+  /* ---------- Navegación ---------- */
+  function ir(v){
+    ["hoy","cal","prog","set"].forEach(function(k){
+      document.getElementById("v-"+k).classList.toggle("on", k === v);
+    });
+    document.querySelectorAll("nav button").forEach(function(b){
+      if(b.dataset.go === v) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+    });
+    if(v === "cal") pintaCal();
+    if(v === "prog") pintaProg();
+    if(v === "set") pintaSet();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll("nav button").forEach(function(b){
+    b.addEventListener("click", function(){ ir(b.dataset.go); });
+  });
+
+  function todo(){ pintaHoy(); pintaCal(); pintaProg(); pintaSet(); }
+  aplicaFs(); pintaWho(); todo(); ir("hoy");
+})();
+</script>
+</body>
+</html>
